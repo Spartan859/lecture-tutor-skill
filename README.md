@@ -1,6 +1,6 @@
 # Lecture Tutor Skill
 
-> 把课件/教材 PDF 变成深度讲解文档的 Claude Code Agent Skill
+> 输入浓缩课件，输出自学讲义 — 完整证明、直觉解读、页码回查，三维展开每一个知识点
 
 [![版本](https://img.shields.io/badge/version-1.1.0-blue)](https://github.com/Epiphanythu/lecture-tutor-skill/blob/main/SKILL.md)
 [![许可](https://img.shields.io/badge/license-MIT-green)](LICENSE)
