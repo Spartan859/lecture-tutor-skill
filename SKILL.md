@@ -274,10 +274,11 @@ LaTeX rules:
 
 ## Step 10. Build and Final Check
 
-- Compile with `xelatex`.
+- Compile with `xelatex` (run twice for table of contents).
 - Confirm both `.tex` and `.pdf` exist.
 - Confirm compile succeeded with zero exit status.
 - Check for: broken math, missing Chinese rendering, unreadable spacing, missing page references.
+- **Clean up intermediate files**: delete `.aux`, `.log`, `.toc` files from the output folder. The final output folder should contain only `.tex` and `.pdf` (plus any user-requested files).
 
 ## Output Naming
 
