@@ -15,6 +15,19 @@
 - **讲义定位回查（最大特色）** — 每个知识点精确标注 `[文件名] 第X页 [章节/定理号]`，讲解作业时还能关联到课件对应章节，告诉你"这道题考的是课件第几页"
 - **Markdown + PDF 双格式输出** — Markdown 方便编辑，PDF 方便打印
 
+## 效果展示
+
+<table>
+<tr>
+<td align="center"><b>输出：DeepDive 讲义文件夹</b></td>
+<td align="center"><b>输出：生成的 PDF 讲义</b></td>
+</tr>
+<tr>
+<td><img src="asset/image.png" alt="输出文件夹" width="400"/></td>
+<td><img src="asset/image2.png" alt="输出PDF" width="400"/></td>
+</tr>
+</table>
+
 ## 快速开始
 
 复制给 Claude Code 完成安装：
