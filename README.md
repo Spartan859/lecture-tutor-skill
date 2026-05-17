@@ -19,12 +19,12 @@
 
 <table>
 <tr>
-<td align="center"><b>输出：DeepDive 讲义文件夹</b></td>
 <td align="center"><b>输出：生成的 PDF 讲义</b></td>
+<td align="center"><b>输出：DeepDive 讲义文件夹</b></td>
 </tr>
 <tr>
-<td><img src="asset/image.png" alt="输出文件夹" width="400"/></td>
-<td><img src="asset/image2.png" alt="输出PDF" width="400"/></td>
+<td><img src="asset/image.png" alt="输出PDF" width="400"/></td>
+<td><img src="asset/image2.png" alt="输出文件夹" width="400"/></td>
 </tr>
 </table>
 
