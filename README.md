@@ -15,17 +15,6 @@
 
 **不是压缩总结，而是加水泡开做教材。**
 
-## 与其他 Skill 的区别
-
-| 特性 | lecture-tutor | summarize-slides-skill |
-|------|--------------|----------------------|
-| 目标 | **展开讲解**，把课件变教材 | **总结概括**，提取要点 |
-| 输出长度 | 源文档的 50-70%（展开而非压缩） | 源文档的精简摘要 |
-| 证明/推导 | 每个定理都有完整证明，逐步推导 | 一般不展开证明 |
-| 数值例子 | 每个概念配具体计算示例 | 通常不提供 |
-| 直观理解 | 几何意义、物理类比、常见误区 | 简要说明 |
-| 适用场景 | 课后自学、考前复习、深入理解 | 快速了解内容概要 |
-
 ## 致谢
 
 本项目的创建受到了 [summarize-slides-skill](https://github.com/Li-Baichuan-James/summarize-slides-skill) 项目的启发，在项目结构、安装流程和 companion skill 机制上参考了该项目的设计。
@@ -77,19 +66,13 @@ https://raw.githubusercontent.com/Epiphanythu/lecture-tutor-skill/main/INSTALL.m
 
 ## 快速开始
 
-### 1. 讲解课件
+### 讲解课件
 
 ```
 详细讲解这个课件 /path/to/lecture.pdf
 ```
 
-### 2. 指定范围
-
-```
-只详细讲解第 3 章到第 5 章。
-```
-
-### 3. 讲解作业（推荐同时提供课件）
+### 讲解作业（推荐同时提供课件）
 
 ```
 讲解这份作业 /path/to/作业.pdf，参考课件 /path/to/课件.pdf
@@ -145,17 +128,11 @@ https://raw.githubusercontent.com/Epiphanythu/lecture-tutor-skill/main/INSTALL.m
 
 ## 适用场景
 
-**适合：**
 - 把浓缩课件变成可自学的详细讲义
 - 深入理解每个定义和定理的来龙去脉
 - 补全课件中省略的推导和解释
 - 生成带有页码引用的教学笔记
 - 考前复习，逐题讲解作业
-
-**不适合：**
-- 做作业解题（不是 homework solver）
-- 写论文
-- 快速获取文档摘要（请用 [summarize-slides-skill](https://github.com/Li-Baichuan-James/summarize-slides-skill)）
 
 ## 技术架构
 
