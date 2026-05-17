@@ -33,8 +33,8 @@ These rules prevent the most common failure: producing a compressed summary inst
 
 - **Target content ratio**: output document should be at least 50--70% of the source page count. A 35-page lecture should produce at least 18--25 pages of explanation, not 13. If output is significantly below this ratio, the explanations are too compressed.
 - **Every theorem must have a FULL proof**, not just a proof sketch. Write out every step of the derivation. If the source does not provide the proof, supply a complete proof yourself. Never write "by induction" without showing the base case and inductive step explicitly.
-- **Every major concept must have a concrete numerical example** (2×2 or 3×3 matrix calculation, explicit vector computation, etc.). Abstract definitions without examples are not acceptable.
-- **Intuitive understanding sections must be at least one full paragraph** (5--8 sentences). Two or three sentences are not enough. Cover: geometric meaning, physical analogy, "why was this invented", common misconceptions.
+- **Every major concept must have a concrete numerical example** (explicit calculation, worked example with actual numbers, etc.). Abstract definitions without examples are not acceptable.
+- **Intuitive understanding sections must be at least one full paragraph** (5--8 sentences). Two or three sentences are not enough. Cover: intuitive meaning, analogy, "why was this invented", common misconceptions.
 - **Every section/chapter must have a transition paragraph** explaining why this section follows from the previous one and what new question it answers.
 - **Every section/chapter must end with a "本节小结"** listing the 3--5 key takeaways.
 - **Do NOT compress to save space.** It is better to be slightly verbose than to leave the reader confused. Each concept should be explained as if the reader has never seen it before.
@@ -176,7 +176,7 @@ For every knowledge point extracted in Step 4, produce a three-dimensional expla
 - Reference: `[文件名] 第X页 [定义/定理Y]`
 - If there are equivalent definitions or conditions, list them all.
 - **Every theorem/proposition must be followed by its COMPLETE proof** (not just a sketch). Show every algebraic step. If the source omits the proof, supply one. Write "$\qed$" at the end.
-- After each definition, provide a concrete example verifying it (e.g., "验证 $A$ 是 Hermite 矩阵" with actual matrix entries).
+- After each definition, provide a concrete example verifying it (e.g., verify that a specific instance satisfies the definition with actual values).
 
 ### Dimension 2: Intuitive Understanding (直观理解)
 
@@ -184,10 +184,10 @@ This is the most important dimension for learning. It must be substantial, not t
 
 - **Minimum length**: at least one full paragraph (5--8 sentences). Do NOT write only 2--3 sentences.
 - Plain language explanation of what the definition means.
-- Geometric interpretation when applicable (e.g., "自伴算子就是对称的拉伸", "幂零变换是逐层消灭信息").
+- Intuitive interpretation when applicable (e.g., use analogies and everyday language to explain abstract concepts).
 - Answer: "Why does this concept exist? What problem does it solve?"
-- Address common misconceptions explicitly (e.g., "$(kT)^* = kT^*$ is WRONG, the correct form is $\bar{k}T^*$").
-- Include a concrete numerical example (e.g., a 2×2 or 3×3 matrix calculation showing the concept in action).
+- Address common misconceptions explicitly (e.g., point out typical errors and show the correct form).
+- Include a concrete numerical example (e.g., a worked calculation showing the concept in action).
 - Use physical or everyday analogies when they genuinely help.
 
 ### Dimension 3: Source Location (讲义定位)
@@ -199,7 +199,7 @@ This is the most important dimension for learning. It must be substantial, not t
 
 The document must read like a textbook, not a list of facts:
 
-- Start each chapter/section with a **transition paragraph** (2--4 sentences) explaining: what question was left unresolved by the previous section, and how this section addresses it. Example: "在学习谱定理时，我们知道正规矩阵可以被酉对角化。但现实中大多数矩阵不是正规的，不能被酉对角化。那么，对于一般的矩阵，我们能做到什么程度？Schur 分解给出的答案是..."
+- Start each chapter/section with a **transition paragraph** (2--4 sentences) explaining: what question was left unresolved by the previous section, and how this section addresses it. Example: "在上一节中，我们学习了概念 A 在特殊条件下的性质。但现实中大多数情况并不满足这个条件。那么，对于一般情况，我们能得到什么结论？本节引入的概念 B 给出了答案..."
 - Show logical chains explicitly: "Definition A enables Theorem B, which we then use to prove Lemma C."
 - When a concept depends on earlier material, briefly recap (2--3 sentences) before continuing. Never assume the reader remembers.
 - End each chapter/section with a **本节小结** (numbered list of 3--5 key takeaways from this section).
