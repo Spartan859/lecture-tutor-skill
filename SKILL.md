@@ -22,6 +22,18 @@ description: Use when the user wants to generate a detailed explanation document
 - A chat-only explanation is **not** a successful deliverable unless the user explicitly opts out of file creation.
 - Check that `xelatex` is available before promising compiled PDF output.
 
+### Depth Requirements (Critical — Do Not Violate)
+
+These rules prevent the most common failure: producing a compressed summary instead of an expanded teaching document.
+
+- **Target page ratio**: output PDF should be at least 50--70% of the source PDF page count. A 35-page lecture should produce at least 18--25 pages of explanation, not 13. If output is significantly below this ratio, the explanations are too compressed.
+- **Every theorem must have a FULL proof**, not just a proof sketch. Write out every step of the derivation. If the source does not provide the proof, supply a complete proof yourself. Never write "by induction" without showing the base case and inductive step explicitly.
+- **Every major concept must have a concrete numerical example** (2×2 or 3×3 matrix calculation, explicit vector computation, etc.). Abstract definitions without examples are not acceptable.
+- **Intuitive understanding sections must be at least one full paragraph** (5--8 sentences). Two or three sentences are not enough. Cover: geometric meaning, physical analogy, "why was this invented", common misconceptions.
+- **Every section/chapter must have a transition paragraph** explaining why this section follows from the previous one and what new question it answers.
+- **Every section/chapter must end with a "本节小结"** listing the 3--5 key takeaways.
+- **Do NOT compress to save space.** It is better to be slightly verbose than to leave the reader confused. Each concept should be explained as if the reader has never seen it before.
+
 ## Skill Boundary
 
 - Allowed skills: `lecture-tutor` and `pdf` only.
@@ -141,7 +153,7 @@ For each segment, the reader must extract:
 1. **segment id** and **page range**
 2. **all definitions** (verbatim, with page reference)
 3. **all theorems, lemmas, corollaries** (statement + page reference)
-4. **all proofs** (or proof sketches if the source provides them)
+4. **all proofs** (complete proofs with every step — never just "proof sketch" or "by induction")
 5. **all important examples** (with page reference)
 6. **all formulas** that are standalone results
 7. **key terminology** (Chinese + English)
@@ -162,17 +174,23 @@ For every knowledge point extracted in Step 5, produce a three-dimensional expla
 ### Dimension 1: Definition & Theorem (定义与定理)
 
 - Quote the exact mathematical definition/theorem from the source.
-- Include the theorem statement precisely.
+- Include the theorem statement precisely and completely.
 - Reference: `[文件名] 第X页 [定义/定理Y]`
-- If there are equivalent definitions, list them.
+- If there are equivalent definitions or conditions, list them all.
+- **Every theorem/proposition must be followed by its COMPLETE proof** (not just a sketch). Show every algebraic step. If the source omits the proof, supply one. Write "$\qed$" at the end.
+- After each definition, provide a concrete example verifying it (e.g., "验证 $A$ 是 Hermite 矩阵" with actual matrix entries).
 
 ### Dimension 2: Intuitive Understanding (直观理解)
 
+This is the most important dimension for learning. It must be substantial, not token.
+
+- **Minimum length**: at least one full paragraph (5--8 sentences). Do NOT write only 2--3 sentences.
 - Plain language explanation of what the definition means.
-- Geometric interpretation when applicable.
+- Geometric interpretation when applicable (e.g., "自伴算子就是对称的拉伸", "幂零变换是逐层消灭信息").
 - Answer: "Why does this concept exist? What problem does it solve?"
-- Address common misconceptions.
-- Use concrete numerical examples when they help understanding.
+- Address common misconceptions explicitly (e.g., "$(kT)^* = kT^*$ is WRONG, the correct form is $\bar{k}T^*$").
+- Include a concrete numerical example (e.g., a 2×2 or 3×3 matrix calculation showing the concept in action).
+- Use physical or everyday analogies when they genuinely help.
 
 ### Dimension 3: Source Location (讲义定位)
 
@@ -183,10 +201,10 @@ For every knowledge point extracted in Step 5, produce a three-dimensional expla
 
 The document must read like a textbook, not a list of facts:
 
-- Start each chapter/section with a brief overview: "This section covers X, Y, Z and why they matter."
-- Show logical chains: "Definition A enables Theorem B, which we then use to prove Lemma C."
-- When a concept depends on earlier material, briefly recap before continuing.
-- End each chapter/section with a brief summary of what was covered.
+- Start each chapter/section with a **transition paragraph** (2--4 sentences) explaining: what question was left unresolved by the previous section, and how this section addresses it. Example: "在学习谱定理时，我们知道正规矩阵可以被酉对角化。但现实中大多数矩阵不是正规的，不能被酉对角化。那么，对于一般的矩阵，我们能做到什么程度？Schur 分解给出的答案是..."
+- Show logical chains explicitly: "Definition A enables Theorem B, which we then use to prove Lemma C."
+- When a concept depends on earlier material, briefly recap (2--3 sentences) before continuing. Never assume the reader remembers.
+- End each chapter/section with a **本节小结** (numbered list of 3--5 key takeaways from this section).
 
 ## Step 8. Verifier Phase
 
@@ -213,9 +231,17 @@ If `REJECTED` or `APPROVED_WITH_NOTES`, fix gaps and re-verify.
 
 Document structure:
 ```
-\documentclass[12pt,a4paper]{article}
-% Clean preamble with CTeX for Chinese support
-% xelatex compilation
+\documentclass[12pt,a4paper]{ctexart}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{geometry}
+\usepackage{graphicx}
+
+\geometry{margin=2.5cm}
+
+% Only these packages. Do NOT use xcolor, tcolorbox, enumitem,
+% hyperref, or other packages that may not be available in
+% TeX Live basic installations. ctexart is the safe choice for
+% Chinese support with xelatex.
 
 \begin{document}
 \title{深度讲解: <source title>}
@@ -223,26 +249,28 @@ Document structure:
 \tableofcontents
 
 \section{<Chapter 1 Title>}
-  \subsection{概述}
+  \subsection{概述}  % transition paragraph + what this section covers
   \subsection{<Knowledge Point 1>}
-    定义与定理 | 直观理解 | 讲义定位
+    \subsubsection*{定义与定理}  % precise statement + full proof + example
+    \subsubsection*{直观理解}   % 5-8 sentences, analogy, misconceptions
+    \subsubsection*{讲义定位}   % [文件名] 第X页
   \subsection{<Knowledge Point 2>}
     ...
-  \subsection{本节小结}
+  \subsection{本节小结}  % 3-5 numbered key takeaways
 
 \section{<Chapter 2 Title>}
   ...
 
+\section*{全讲总结}  % overall summary at the end
 \end{document}
 ```
 
 LaTeX rules:
+- **Use `ctexart` as document class** — this is the safest way to get Chinese support without extra packages.
+- **Only use packages from this whitelist**: `amsmath`, `amssymb`, `amsthm`, `geometry`, `graphicx`. Do NOT use `xcolor`, `tcolorbox`, `enumitem`, `hyperref`, or any other package that may not be installed.
 - Single-column, readable layout.
-- Use `amsmath` for all math.
-- Use `ctex` or `xeCJK` for Chinese text.
-- Use structured subsections for each knowledge point.
-- Use a consistent visual template for the three dimensions (e.g., colored boxes or bold headers).
-- Keep figure code reproducible with `tikz` if figures are needed.
+- Use `\subsubsection*{}` for the three dimensions (定义与定理, 直观理解, 讲义定位) to keep the structure clean without extra packages.
+- Keep figure code reproducible with `tikz` if figures are needed (only if tikz is available).
 
 ## Step 10. Build and Final Check
 
@@ -262,9 +290,15 @@ LaTeX rules:
 
 - skipping definitions or theorems because they seem "obvious"
 - producing a generic outline instead of full explanations
-- missing the intuitive understanding dimension
+- writing "proof sketch" instead of a complete proof with every step
+- writing only 2--3 sentences for intuitive understanding (minimum is one full paragraph)
+- omitting concrete numerical examples for major concepts
+- missing transition paragraphs between sections
+- missing 本节小结 at the end of each section
+- producing output significantly shorter than 50% of source page count
 - losing page references during merge
 - writing a chat-only explanation without generating the document
 - scattering files outside the `DeepDive - <stem>` folder
 - claiming completion before `.tex` and `.pdf` both exist
+- using LaTeX packages not in the whitelist (causing compilation failure)
 - compiling without verifying coverage first
