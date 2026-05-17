@@ -1,4 +1,5 @@
 ---
+version: "1.1.0"
 name: lecture-tutor
 description: Use when the user wants to generate a detailed explanation document from a lecture PDF, course slides, textbook PDF, or markdown notes. Triggers on requests like 详细讲解, 生成讲解文档, 把这个课件讲清楚, explain this lecture, 生成深度讲解, 帮我把课件变成讲义, or any request to produce a comprehensive teaching document from source material.
 ---
@@ -13,20 +14,24 @@ description: Use when the user wants to generate a detailed explanation document
 
 - **REQUIRED COMPANION SKILL:** use `pdf` for PDF intake and reading. This workflow is not optional.
 - **NO OTHER SKILLS:** when this skill applies, use only `lecture-tutor` plus `pdf`. Do not invoke other skills.
-- Default deliverables are `.tex` and compiled `.pdf`. The PDF is the required final artifact unless the user explicitly opts out.
+- Default deliverables are a **Markdown** file (`.md`) **and** a compiled **PDF** file (`.pdf`). Both are always generated.
+- Markdown provides easy reading and editing; PDF provides formatted print-ready output.
+- If `xelatex` is unavailable, Markdown is still delivered; report the PDF blocker to the user.
 - Default output folder: `DeepDive - <pdf-stem>` inside the same directory as the source PDF.
-- All generated files (intermediate text, notes, LaTeX, images) must live inside that output folder only. Never scatter them beside the source PDF.
+- All generated files must live inside that output folder only.
 - Default writing style is Chinese-first, with important technical terms preserved in English in parentheses.
 - Each knowledge point must include source page reference: `[文件名] 第X页 [节号/定理号]`.
 - Do not skip any definition, theorem, lemma, or important example from the source material.
+- **Read ALL pages of the source PDF.** Never stop after the first page. Always confirm total page count and read every page. Missing pages = missing content = failed deliverable.
+- **LaTeX content must be identical in depth to Markdown.** Do NOT write a compressed summary in `.tex` while the `.md` is detailed. Both files must contain the same full proofs, examples, and explanations.
+- **Compile in `/tmp`**, only copy `.tex` and `.pdf` back to output folder. No intermediate files (`.aux`, `.log`, `.toc`) should ever appear in the output folder.
 - A chat-only explanation is **not** a successful deliverable unless the user explicitly opts out of file creation.
-- Check that `xelatex` is available before promising compiled PDF output.
 
 ### Depth Requirements (Critical — Do Not Violate)
 
 These rules prevent the most common failure: producing a compressed summary instead of an expanded teaching document.
 
-- **Target page ratio**: output PDF should be at least 50--70% of the source PDF page count. A 35-page lecture should produce at least 18--25 pages of explanation, not 13. If output is significantly below this ratio, the explanations are too compressed.
+- **Target content ratio**: output document should be at least 50--70% of the source page count. A 35-page lecture should produce at least 18--25 pages of explanation, not 13. If output is significantly below this ratio, the explanations are too compressed.
 - **Every theorem must have a FULL proof**, not just a proof sketch. Write out every step of the derivation. If the source does not provide the proof, supply a complete proof yourself. Never write "by induction" without showing the base case and inductive step explicitly.
 - **Every major concept must have a concrete numerical example** (2×2 or 3×3 matrix calculation, explicit vector computation, etc.). Abstract definitions without examples are not acceptable.
 - **Intuitive understanding sections must be at least one full paragraph** (5--8 sentences). Two or three sentences are not enough. Cover: geometric meaning, physical analogy, "why was this invented", common misconceptions.
@@ -43,16 +48,16 @@ These rules prevent the most common failure: producing a compressed summary inst
 ## Required Outcome
 
 The default successful outcome is:
-- a saved LaTeX source file named `DeepDive - <stem>.tex`
-- a compiled PDF file named `DeepDive - <stem>.pdf`
+- a saved Markdown file named `DeepDive - <stem>.md`
+- a saved LaTeX source named `DeepDive - <stem>.tex`
+- a compiled PDF named `DeepDive - <stem>.pdf`
 - all generated files grouped in one folder named `DeepDive - <stem>` inside the same directory as the source PDF
-- no intermediate files left outside that output folder
-- a final response that reports the artifact paths and any blockers
+- a final response that reports the artifact paths
 
 The following are **not** successful completions:
 - an inline chat explanation only
 - a document that skips definitions, theorems, or examples
-- claiming completion before LaTeX is written and PDF is compiled
+- claiming completion before the Markdown file is written and saved
 - a generic chapter outline instead of full explanations
 
 ## When to Use
@@ -76,9 +81,6 @@ Do not use this skill for:
 
 ```
 Intake (confirm source, output dir, scope)
-    |
-    v
-Check Build Environment (xelatex)
     |
     v
 Read PDF Globally (understand macro-structure)
@@ -107,10 +109,10 @@ Verifier approved?
     |-- YES -> continue
     |
     v
-Write LaTeX
+Write Markdown file
     |
     v
-Build PDF with xelatex
+Write LaTeX and compile PDF with xelatex
     |
     v
 Final artifact check
@@ -122,33 +124,29 @@ Report result
 ## Step 1. Intake
 
 - Confirm source PDF path or Markdown file path.
+- **Ask the user for the corresponding lecture/course PDF** if the source is a homework/assignment document. The lecture PDF is needed for accurate page references in the 讲义定位 dimension. If the user does not provide a lecture PDF, note this limitation and only reference the source document's own pages.
 - Confirm output directory. Default: `DeepDive - <stem>` inside the same directory as the source file.
 - Determine scope: whole document or specific chapters. Default: whole document.
-- Determine output format: `.tex` + `.pdf`. Default: both.
+- Determine output format: Markdown + PDF (default). If `xelatex` is missing, Markdown only and report the blocker.
 - Record any style instructions from the user (e.g., application domain focus, language preference).
 - Create the output folder as the first filesystem step.
 
-## Step 2. Check Build Environment
-
-- Verify `xelatex` exists before promising compiled PDF.
-- If `xelatex` is missing, report the blocker. Do not silently fall back to `.tex` only.
-
-## Step 3. Read the Source Globally
+## Step 2. Read the Source Globally
 
 - Use `pdf` skill to read the entire document enough to understand macro-structure.
 - Identify chapter boundaries, section titles, definition blocks, theorem blocks, example blocks.
 - Build a segmentation map: which pages belong to which chapter/section.
 - For very long documents (100+ pages), segmentation is mandatory.
 
-## Step 4. Segment the Source
+## Step 3. Segment the Source
 
 - Segment by natural chapter/section boundaries.
 - Use the coarsest segmentation that preserves topic integrity.
 - Each segment should be self-contained enough for an independent reader to process.
 
-## Step 5. Segment Reader Phase
+## Step 4. Segment Reader Phase
 
-For each segment, the reader must extract:
+For each segment, the reader must extract (reference Step 3 for segmentation):
 
 1. **segment id** and **page range**
 2. **all definitions** (verbatim, with page reference)
@@ -167,9 +165,9 @@ Segment readers are NOT allowed to:
 - skip page references
 - decide the final document structure
 
-## Step 6. Generate Three-Dimensional Explanations
+## Step 5. Generate Three-Dimensional Explanations
 
-For every knowledge point extracted in Step 5, produce a three-dimensional explanation:
+For every knowledge point extracted in Step 4, produce a three-dimensional explanation:
 
 ### Dimension 1: Definition & Theorem (定义与定理)
 
@@ -197,7 +195,7 @@ This is the most important dimension for learning. It must be substantial, not t
 - `[文件名] 第X页 [节号]`
 - Cross-reference related concepts from earlier/later pages.
 
-## Step 7. Build Narrative Flow
+## Step 6. Build Narrative Flow
 
 The document must read like a textbook, not a list of facts:
 
@@ -206,7 +204,7 @@ The document must read like a textbook, not a list of facts:
 - When a concept depends on earlier material, briefly recap (2--3 sentences) before continuing. Never assume the reader remembers.
 - End each chapter/section with a **本节小结** (numbered list of 3--5 key takeaways from this section).
 
-## Step 8. Verifier Phase
+## Step 7. Verifier Phase
 
 After the full document draft is assembled, run a coverage verifier:
 
@@ -227,65 +225,88 @@ The verifier must return:
 
 If `REJECTED` or `APPROVED_WITH_NOTES`, fix gaps and re-verify.
 
-## Step 9. LaTeX Output
+## Step 8. Write Output Files
+
+### 8a. Markdown Output
 
 Document structure:
+```markdown
+# 深度讲解: <source title>
+
+## <Chapter 1 Title>
+
+### 概述
+
+(transition paragraph + what this section covers)
+
+### <Knowledge Point 1>
+
+#### 定义与定理
+
+(precise statement + full proof + example)
+
+> [文件名] 第X页 [定义/定理Y]
+
+#### 直观理解
+
+(5-8 sentences, analogy, misconceptions, numerical example)
+
+#### 讲义定位
+
+[文件名] 第X页 [节号]
+
+(cross-references to related concepts)
+
+### <Knowledge Point 2>
+...
+
+### 本节小结
+
+1. key takeaway 1
+2. key takeaway 2
+3. key takeaway 3
+
+## <Chapter 2 Title>
+...
+
+## 全讲总结
+
+(overall summary at the end)
 ```
-\documentclass[12pt,a4paper]{ctexart}
-\usepackage{amsmath,amssymb,amsthm}
-\usepackage{geometry}
-\usepackage{graphicx}
 
-\geometry{margin=2.5cm}
+Markdown rules:
+- Use standard Markdown with LaTeX math (`$...$` inline, `$$...$$` display).
+- All mathematical expressions must use proper LaTeX math notation for rendering in tools like Typora, VS Code, Obsidian.
+- Use `>` blockquotes for source page references.
+- Use `---` horizontal rules to separate major sections.
+- Keep the document self-contained — no external image dependencies.
 
-% Only these packages. Do NOT use xcolor, tcolorbox, enumitem,
-% hyperref, or other packages that may not be available in
-% TeX Live basic installations. ctexart is the safe choice for
-% Chinese support with xelatex.
+### 8b. LaTeX/PDF Output
 
-\begin{document}
-\title{深度讲解: <source title>}
-\maketitle
-\tableofcontents
+After writing the Markdown, also generate a LaTeX file and compile to PDF:
 
-\section{<Chapter 1 Title>}
-  \subsection{概述}  % transition paragraph + what this section covers
-  \subsection{<Knowledge Point 1>}
-    \subsubsection*{定义与定理}  % precise statement + full proof + example
-    \subsubsection*{直观理解}   % 5-8 sentences, analogy, misconceptions
-    \subsubsection*{讲义定位}   % [文件名] 第X页
-  \subsection{<Knowledge Point 2>}
-    ...
-  \subsection{本节小结}  % 3-5 numbered key takeaways
+1. Check that `xelatex` is available. If not, skip PDF generation and report the blocker.
+2. Convert the Markdown content to LaTeX using `ctexart` document class.
+3. Only use packages from this whitelist: `amsmath`, `amssymb`, `amsthm`, `geometry`, `graphicx`. Do NOT use `xcolor`, `tcolorbox`, `enumitem`, `hyperref`, or any other package.
+4. Compile in `/tmp` to avoid intermediate files polluting the output folder, then copy only `.tex` and `.pdf` back:
+   ```bash
+   cp "<output-folder>/DeepDive - <stem>.tex" /tmp/ && cd /tmp && xelatex "DeepDive - <stem>.tex" && xelatex "DeepDive - <stem>.tex" && cp "DeepDive - <stem>.pdf" "<output-folder>/"
+   ```
+   Intermediate files (`.aux`, `.log`, `.toc`) remain in `/tmp` and are cleaned by the OS automatically.
+5. Confirm both `.tex` and `.pdf` exist in the output folder.
 
-\section{<Chapter 2 Title>}
-  ...
+## Step 9. Final Check
 
-\section*{全讲总结}  % overall summary at the end
-\end{document}
-```
-
-LaTeX rules:
-- **Use `ctexart` as document class** — this is the safest way to get Chinese support without extra packages.
-- **Only use packages from this whitelist**: `amsmath`, `amssymb`, `amsthm`, `geometry`, `graphicx`. Do NOT use `xcolor`, `tcolorbox`, `enumitem`, `hyperref`, or any other package that may not be installed.
-- Single-column, readable layout.
-- Use `\subsubsection*{}` for the three dimensions (定义与定理, 直观理解, 讲义定位) to keep the structure clean without extra packages.
-- Keep figure code reproducible with `tikz` if figures are needed (only if tikz is available).
-
-## Step 10. Build and Final Check
-
-- Compile with `xelatex` (run twice for table of contents).
-- Confirm both `.tex` and `.pdf` exist.
-- Confirm compile succeeded with zero exit status.
-- Check for: broken math, missing Chinese rendering, unreadable spacing, missing page references.
-- **Clean up intermediate files**: delete `.aux`, `.log`, `.toc` files from the output folder. The final output folder should contain only `.tex` and `.pdf` (plus any user-requested files).
+- Confirm the Markdown file exists and is saved in the output folder.
+- If `xelatex` is available, confirm `.tex` and `.pdf` both exist and compile succeeded.
+- Check for: broken math syntax, missing page references, incomplete sections.
 
 ## Output Naming
 
 - output folder: `DeepDive - <stem>` inside source PDF directory
+- Markdown file: `DeepDive - <stem>.md`
 - LaTeX source: `DeepDive - <stem>.tex`
-- final PDF: `DeepDive - <stem>.pdf`
-- intermediate files: keep inside the output folder with deterministic names
+- compiled PDF: `DeepDive - <stem>.pdf`
 
 ## Common Failure Modes
 
@@ -300,6 +321,7 @@ LaTeX rules:
 - losing page references during merge
 - writing a chat-only explanation without generating the document
 - scattering files outside the `DeepDive - <stem>` folder
-- claiming completion before `.tex` and `.pdf` both exist
+- claiming completion before the Markdown file is written and saved
+- claiming completion before `.tex` and `.pdf` are both generated (when xelatex is available)
 - using LaTeX packages not in the whitelist (causing compilation failure)
-- compiling without verifying coverage first
+- writing LaTeX/PDF without verifying coverage first

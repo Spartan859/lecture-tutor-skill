@@ -92,26 +92,85 @@ Do not present this local `pdf` copy flow as unconditional or universally suppor
 8. Re-check the `pdf status`.
 If it is still `unavailable`, report the `install result` as `incomplete` for full `lecture-tutor` use and stop.
 
-9. Check the local LaTeX environment with these commands, in this order:
-- `xelatex --version`
-- `pdflatex --version`
-- `latexmk --version`
+9. Install the LaTeX environment. This step is mandatory — do not skip it.
+The skill requires `xelatex` and several TeX packages to compile Chinese PDF output.
+Follow the instructions that match the current operating system.
 
-10. Interpret the LaTeX check as a capability probe.
-Treat it as:
-- `xelatex-ready` if `xelatex --version` returns a usable version string
-- `fallback-only` if `xelatex` is unavailable but `pdflatex --version` or `latexmk --version` returns a usable version string
-- `unavailable` if none of the three commands returns a usable version string
+### macOS
 
-Missing `xelatex` means the default Chinese-first compiled PDF path is not fully validated.
+9a. Detect which TeX distribution (if any) is already installed.
+Run: `which xelatex`
+- If `xelatex` is found, skip to step 9c.
+- If not found, continue to step 9b.
 
-11. Verify installation state.
+9b. Install a TeX distribution.
+Run: `brew install --cask basictex`
+If `brew` is not available, report the blocker: "Homebrew is required but not installed. Install it from https://brew.sh and re-run."
+After basictex installs, the user's shell may not yet see the new binaries.
+Run: `eval "$(/usr/libexec/path_helper)"`
+Then verify: `which xelatex`
+If still not found, try: `export PATH="/Library/TeX/texbin:$PATH"`
+
+9c. Install required TeX packages.
+Run the following commands in order:
+```
+sudo tlmgr update --self
+sudo tlmgr install xecjk ctex amsmath amssymb amsthm geometry graphicx
+```
+If `sudo` requires a password and the agent cannot provide one, instruct the user to run these two commands manually in their terminal, then continue.
+
+9d. Verify the LaTeX installation.
+Run: `xelatex --version`
+Confirm it returns a version string. If it does, set `latex status` to `xelatex-ready`.
+
+### Linux (Debian/Ubuntu)
+
+9a. Detect which TeX distribution (if any) is already installed.
+Run: `which xelatex`
+- If `xelatex` is found, skip to step 9c.
+- If not found, continue to step 9b.
+
+9b. Install TeX Live with XeTeX and Chinese support.
+Run:
+```
+sudo apt update
+sudo apt install -y texlive-xetex texlive-lang-chinese
+```
+
+9c. Verify the LaTeX installation.
+Run: `xelatex --version`
+Confirm it returns a version string. If it does, set `latex status` to `xelatex-ready`.
+
+### Linux (RHEL/CentOS/Fedora)
+
+9a. Detect which TeX distribution (if any) is already installed.
+Run: `which xelatex`
+- If `xelatex` is found, skip to step 9c.
+- If not found, continue to step 9b.
+
+9b. Install TeX Live with XeTeX.
+Run:
+```
+sudo yum install -y texlive-xetex texlive-collection-langchinese
+```
+
+9c. Verify the LaTeX installation.
+Run: `xelatex --version`
+Confirm it returns a version string. If it does, set `latex status` to `xelatex-ready`.
+
+### Other or unknown OS
+
+If the OS is not macOS or Linux, report the blocker:
+"Automatic LaTeX installation is not supported on this OS. Please install TeX Live with XeTeX support manually, then re-run."
+Set `latex status` to `unavailable`.
+
+10. Verify installation state.
 If the platform exposes a skill list or installed-skill view, confirm that `lecture-tutor` appears there.
 If the platform does not expose such a mechanism, confirm that:
 - the selected `<skills-dir>` matches the host-family rule, and
 - `lecture-tutor/SKILL.md` is directly inside that directory.
 
-12. Report the final result with:
+11. Report the final result with:
 - detected agent family
 - resolved skills directory
 - installed skill path
@@ -127,5 +186,4 @@ An installation counts as `strictly validated` only if all of the following are 
 - `<skills-dir>/lecture-tutor/README.md` exists
 - `<skills-dir>/lecture-tutor/LICENSE` exists
 - companion `pdf` skill is `discoverability-confirmed` or `path-validated`
-
-LaTeX is a runtime capability check, not the installation criterion.
+- LaTeX is `xelatex-ready`
