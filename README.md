@@ -10,15 +10,9 @@
 
 `lecture-tutor` 就是解决这个问题的：**输入一份课件 PDF，自动输出一份完整的深度讲解文档**。每个知识点都按「定义与定理 → 直观理解 → 讲义定位」三维模式展开，生成可以独立阅读的自学讲义。
 
-## 与 `summarize-slides` 的区别
+## 致谢
 
-| | `summarize-slides` | `lecture-tutor` |
-|---|---|---|
-| 目标 | 压缩成考前小抄 | 展开成教学讲义 |
-| 输出长度 | ~10 页 | 完整详细文档 |
-| 覆盖度 | 只保留考点 | 每个定义、定理、例子 |
-| 深度 | 要点列表 | 完整三维讲解 |
-| 使用场景 | 考前复习 | 从零深入理解 |
+本项目的创建受到了 [summarize-slides-skill](https://github.com/Li-Baichuan-James/summarize-slides-skill) 项目的启发，在项目结构、安装流程和 companion skill 机制上参考了该项目的设计。
 
 ## 安装
 
@@ -26,7 +20,7 @@
 
 ```
 Fetch and follow instructions from:
-https://raw.githubusercontent.com/<your-username>/lecture-tutor-skill/main/INSTALL.md
+https://raw.githubusercontent.com/Epiphanythu/lecture-tutor-skill/main/INSTALL.md
 ```
 
 ## 快速开始

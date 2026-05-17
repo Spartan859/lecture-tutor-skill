@@ -3,13 +3,13 @@
 This guide is the source of truth for installing and validating the `lecture-tutor` skill from scratch.
 
 Repository:
-- `https://github.com/<your-username>/lecture-tutor-skill`
+- `https://github.com/Epiphanythu/lecture-tutor-skill`
 
 Raw files for this skill:
-- `https://raw.githubusercontent.com/<your-username>/lecture-tutor-skill/main/SKILL.md`
-- `https://raw.githubusercontent.com/<your-username>/lecture-tutor-skill/main/INSTALL.md`
-- `https://raw.githubusercontent.com/<your-username>/lecture-tutor-skill/main/README.md`
-- `https://raw.githubusercontent.com/<your-username>/lecture-tutor-skill/main/LICENSE`
+- `https://raw.githubusercontent.com/Epiphanythu/lecture-tutor-skill/main/SKILL.md`
+- `https://raw.githubusercontent.com/Epiphanythu/lecture-tutor-skill/main/INSTALL.md`
+- `https://raw.githubusercontent.com/Epiphanythu/lecture-tutor-skill/main/README.md`
+- `https://raw.githubusercontent.com/Epiphanythu/lecture-tutor-skill/main/LICENSE`
 
 Companion `pdf` skill references:
 - Repository path: `https://github.com/anthropics/skills/tree/main/skills/pdf`
@@ -36,7 +36,7 @@ Copy and paste this prompt to your LLM agent:
 
 ```text
 Install and validate the `lecture-tutor` skill by following this guide exactly:
-https://raw.githubusercontent.com/<your-username>/lecture-tutor-skill/main/INSTALL.md
+https://raw.githubusercontent.com/Epiphanythu/lecture-tutor-skill/main/INSTALL.md
 ```
 
 ## For LLM Agents

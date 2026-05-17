@@ -7,7 +7,7 @@ description: Use when the user wants to generate a detailed explanation document
 
 读取课件/教材 PDF 或 Markdown，自动生成一份完整的深度讲解文档。不是压缩总结，而是把课件中每一个定义、定理、公式展开讲清楚，用「理论 + 直观 + 定位」三维模式，产出一篇可以独立阅读的学习讲义。
 
-**核心理念：** `summarize-slides` 是榨干水分做小抄，`lecture-tutor` 是加水泡开做教材。输入一份课件，输出一份自学友好的深度讲解文档。
+**核心理念：** 输入一份浓缩的课件，输出一份自学友好的深度讲解文档。不是压缩总结，而是加水泡开做教材。
 
 ## Non-Negotiables
 
@@ -57,7 +57,6 @@ Use this skill when the user wants any of the following from a PDF or Markdown l
 - 帮我把这些slides做成教学笔记
 
 Do not use this skill for:
-- compressing into a cheat sheet (use `summarize-slides`)
 - homework solving
 - essay writing
 
@@ -258,19 +257,6 @@ LaTeX rules:
 - LaTeX source: `DeepDive - <stem>.tex`
 - final PDF: `DeepDive - <stem>.pdf`
 - intermediate files: keep inside the output folder with deterministic names
-
-## Relationship to `summarize-slides`
-
-| | `summarize-slides` | `lecture-tutor` |
-|---|---|---|
-| Goal | Compress into cheat sheet | Expand into teaching document |
-| Output length | ~10 pages | Full detailed document |
-| Coverage | Key exam points only | Every definition, theorem, example |
-| Depth | Bullet points | Full three-dimensional explanations |
-| Use case | Exam review | Deep learning from scratch |
-| Output folder | `Summary - <stem>` | `DeepDive - <stem>` |
-
-When a user says "总结" or "考点", use `summarize-slides`. When a user says "详细讲解" or "生成讲解文档", use `lecture-tutor`.
 
 ## Common Failure Modes
 
