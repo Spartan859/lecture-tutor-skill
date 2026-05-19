@@ -22,7 +22,7 @@ Companion `pdf` skill references:
 
 State model used in this guide:
 - `pdf status` is one of: `discoverability-confirmed`, `path-validated`, `unavailable`
-- `latex status` is one of: `xelatex-ready`, `fallback-only`, `unavailable`
+- `latex status` is one of: `xelatex-ready`, `unavailable`
 - `install result` is one of: `strictly validated`, `path-validated`, `incomplete`
 
 Important naming rule:
@@ -176,7 +176,7 @@ If the platform does not expose such a mechanism, confirm that:
 - installed skill path
 - file list in `<skills-dir>/lecture-tutor/`
 - whether `pdf` is `discoverability-confirmed`, `path-validated`, or `unavailable`
-- whether LaTeX is `xelatex-ready`, `fallback-only`, or `unavailable`
+- whether LaTeX is `xelatex-ready` or `unavailable`
 - whether the `install result` is `strictly validated`, `path-validated`, or `incomplete`
 
 ## Validation Standard
