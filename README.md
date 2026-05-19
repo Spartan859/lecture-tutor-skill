@@ -2,7 +2,7 @@
 
 > 输入浓缩课件，输出自学讲义 — 精确到页码和章节的知识点定位，配合完整证明与直觉解读
 
-[![版本](https://img.shields.io/badge/version-1.1.0-blue)](https://github.com/Epiphanythu/lecture-tutor-skill/blob/main/SKILL.md)
+[![版本](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/Epiphanythu/lecture-tutor-skill/blob/main/SKILL.md)
 [![许可](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
@@ -13,7 +13,7 @@
 - **三维讲解模式** — 从「定义与定理 → 直观理解 → 讲义定位」三个维度展开
 - **完整证明，拒绝省略** — 每个定理逐步推导，不接受"证明略"
 - **讲义定位回查（最大特色）** — 每个知识点精确标注 `[文件名] 第X页 [章节/定理号]`，讲解作业时还能关联到课件对应章节，告诉你"这道题考的是课件第几页"
-- **Markdown + PDF 双格式输出** — Markdown 方便编辑，PDF 方便打印
+- **TeX + PDF 双格式输出** — LaTeX 源文件便于编辑和版本控制，PDF 方便阅读和打印
 
 ## 效果展示
 
@@ -55,11 +55,10 @@ https://raw.githubusercontent.com/Epiphanythu/lecture-tutor-skill/main/INSTALL.m
 
 | 文件 | 说明 |
 |------|------|
-| `DeepDive - <stem>.md` | Markdown，便于阅读和编辑 |
-| `DeepDive - <stem>.tex` | LaTeX 源文件 |
+| `DeepDive - <stem>.tex` | LaTeX 源文件，便于编辑 |
 | `DeepDive - <stem>.pdf` | 编译后的 PDF |
 
-- 如果 `xelatex` 不可用，仍会交付 Markdown，并提示 PDF 生成受阻
+- 如果 `xelatex` 不可用，将报告错误并停止 — 该技能需要 LaTeX 环境
 - 默认文风为中文主写，重要术语保留英文括注
 
 ## 适用场景
