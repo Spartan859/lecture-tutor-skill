@@ -1,5 +1,5 @@
 ---
-version: "1.2.0"
+version: "2.0.0"
 name: lecture-tutor
 description: Use when the user wants to generate a detailed explanation document from a lecture PDF, course slides, or textbook PDF. Triggers on requests like 详细讲解, 生成讲解文档, 把这个课件讲清楚, explain this lecture, 生成深度讲解, 帮我把课件变成讲义, or any request to produce a comprehensive teaching document from source material.
 ---
@@ -12,8 +12,10 @@ description: Use when the user wants to generate a detailed explanation document
 
 ## Non-Negotiables
 
-- **REQUIRED COMPANION SKILL:** use `pdf` for PDF intake and reading.
-- **NO OTHER SKILLS:** when this skill applies, use only `lecture-tutor` plus `pdf`.
+- **REQUIRED COMPANION SKILLS:** use `firecrawl-parse` for PDF-to-markdown text extraction and `pdf` for page-to-image conversion (pdf2image) and page splitting (pypdf).
+- **NO OTHER SKILLS:** when this skill applies, use only `lecture-tutor` plus `firecrawl-parse` plus `pdf`.
+- **ALL INTERMEDIATE OUTPUT TO DISK:** never hold the entire PDF content in context. Save every intermediate result to `<output-folder>/.work/`.
+- **CHUNKED PROCESSING:** process the PDF in segments of at most 10 pages. Load one segment at a time into context.
 - Default deliverables are a **LaTeX source** file (`.tex`) **and** a compiled **PDF** file (`.pdf`). Both are always generated.
 - If `xelatex` is unavailable, report the blocker and stop — there is no fallback format.
 - Default output folder: `DeepDive - <pdf-stem>` inside the same directory as the source PDF.
@@ -21,7 +23,7 @@ description: Use when the user wants to generate a detailed explanation document
 - Default writing style is Chinese-first, with important technical terms preserved in English in parentheses.
 - Each knowledge point must include source page reference: `[文件名] 第X页 [节号/定理号]`.
 - Do not skip any definition, theorem, lemma, or important example from the source material.
-- **Read ALL pages of the source PDF.** Never stop after the first page.
+- **Process ALL pages of the source PDF.** Never stop after the first chunk. Every page must be covered.
 - **Compile in `/tmp`**, only copy `.tex` and `.pdf` back to output folder. No intermediate files in the output folder.
 - A chat-only explanation is **not** a successful deliverable unless the user explicitly opts out of file creation.
 
@@ -37,7 +39,9 @@ description: Use when the user wants to generate a detailed explanation document
 
 ## Skill Boundary
 
-- Allowed skills: `lecture-tutor` and `pdf` only.
+- Allowed skills: `lecture-tutor`, `firecrawl-parse`, and `pdf` only.
+- `firecrawl-parse` is used for PDF-to-markdown text extraction (`firecrawl parse` CLI or `mcp__firecrawl__firecrawl_parse` MCP tool).
+- `pdf` is used **only** for `pdf2image` page-to-image conversion and `pypdf` page-range splitting.
 - Forbidden: all other skills.
 - Task or subagent mechanisms may still be used when the platform supports them.
 
@@ -75,22 +79,22 @@ Do not use this skill for:
 ## Execution Flow
 
 ```
-Intake (confirm source, output dir, scope)
+Step 1: Intake (confirm source, output dir, scope, environment check)
     |
     v
-Read and Segment (global read, split by chapter/section)
+Step 2: Chunked Text Extraction (firecrawl in segments, save to .work/)
     |
     v
-Extract and Explain (per segment: extract knowledge points, write 3D explanations)
+Step 3: Formula Page Detection & Vision Extraction (detect garbled math → convert to images → transcribe LaTeX)
     |
     v
-Assemble and Verify (merge into draft, check coverage)
+Step 4: Segmentation Map (identify chapters/sections, build segment-map.json)
     |
     v
-Write TeX and compile PDF
+Step 5: Per-Segment Explanation (load one segment's .work/ files, produce 3D explanation, save segment .tex)
     |
     v
-Final check and report
+Step 6: Assemble, Compile, Verify
 ```
 
 ## Step 1. Intake
@@ -99,32 +103,196 @@ Final check and report
 - **Ask the user for the corresponding lecture/course PDF** if the source is a homework/assignment document. The lecture PDF is needed for accurate page references. If the user does not provide one, note this limitation and only reference the source document's own pages.
 - Confirm output directory. Default: `DeepDive - <stem>` inside the same directory as the source file.
 - Determine scope: whole document or specific chapters. Default: whole document.
-- If `xelatex` is unavailable, report the blocker immediately.
+- **Environment check:**
+  - Verify `xelatex` is available. If not, report the blocker immediately.
+  - Verify `firecrawl` CLI is available (`which firecrawl`). If not, report the blocker.
+  - Check `pdf2image` availability: `python3 -c "from pdf2image import convert_from_path"`. If unavailable, warn the user that formula vision extraction will be skipped (Step 3 becomes optional). Suggest: `brew install poppler && pip install pdf2image`.
 - Record any style instructions from the user.
 - Create the output folder as the first filesystem step.
+- Create `<output-folder>/.work/` for intermediate files.
 
-## Step 2. Read and Segment
+## Step 2. Chunked Text Extraction
 
-- Use `pdf` skill to read the entire document.
+Use `firecrawl-parse` to extract PDF text as markdown. Save all results to `.work/` — never load the entire document into context at once.
+
+### 2a. Determine chunk plan
+
+- Use `pypdf` to read page count only: `PdfReader(path).len(pages)`.
+- Split into non-overlapping chunks of at most 10 pages each.
+- Example: 72 pages → chunks: 1-10, 11-20, ..., 71-72 (8 chunks).
+
+### 2b. Extract each chunk
+
+**For documents ≤ 50 pages:**
+
+```bash
+firecrawl parse "<source-pdf-path>" -o "<output-folder>/.work/full-text.md"
+```
+
+Then use `pypdf` to determine where each page boundary falls in the markdown (approximately), or simply read the file in batches using `Read` with `offset`/`limit`.
+
+**For documents > 50 pages:**
+
+Use `pypdf` to split the PDF into chunk PDFs first, then parse each:
+
+```python
+from pypdf import PdfReader, PdfWriter
+reader = PdfReader(source_pdf)
+for chunk_start in range(0, len(reader.pages), 10):
+    chunk_end = min(chunk_start + 10, len(reader.pages))
+    writer = PdfWriter()
+    for p in range(chunk_start, chunk_end):
+        writer.add_page(reader.pages[p])
+    chunk_path = f"<output-folder>/.work/chunk-{chunk_start//10 + 1}.pdf"
+    with open(chunk_path, "wb") as f:
+        writer.write(f)
+```
+
+Then parse each chunk:
+
+```bash
+firecrawl parse "<output-folder>/.work/chunk-1.pdf" -o "<output-folder>/.work/chunk-1.md"
+firecrawl parse "<output-folder>/.work/chunk-2.pdf" -o "<output-folder>/.work/chunk-2.md"
+# ... etc
+```
+
+Delete the temporary chunk PDFs after markdown extraction to save disk space.
+
+### 2c. Read each chunk from disk
+
+Use the `Read` tool with `offset` and `limit` parameters to read each markdown file in batches of no more than 300 lines. Never read more than one chunk at a time.
+
+### 2d. Build segmentation map
+
+Scan each chunk's text for chapter/section titles, definition blocks, theorem blocks, example blocks. Build a JSON segmentation map:
+
+```json
+{
+  "source_file": "lecture.pdf",
+  "total_pages": 72,
+  "chunks": ["chunk-1.md", "chunk-2.md", "..."],
+  "segments": [
+    {
+      "id": 1,
+      "title": "Chapter 1: Introduction",
+      "pages": [1, 2, 3],
+      "chunks": ["chunk-1.md"],
+      "has_formulas": true,
+      "formula_pages": [2, 3]
+    }
+  ]
+}
+```
+
+Save to `<output-folder>/.work/segment-map.json`.
+
+## Step 3. Formula Page Detection & Vision Extraction
+
+**This step is optional if `pdf2image` is not available.** If skipped, note in the final document that formulas have not been vision-verified and may contain extraction errors.
+
+### 3a. Detect formula-dense regions
+
+Scan each chunk markdown file for formula corruption patterns:
+
+- Isolated Unicode math symbols: α, β, γ, ∑, ∫, ∂, ∇, →, ∈, ⊂
+- Fragmented equation-like text (e.g., `d x d t = A x + B u` instead of `dx/dt = Ax + Bu`)
+- Symbol sequences without recognizable word patterns
+- Sections labeled "定义", "定理", "引理", "证明" followed by predominantly symbolic content
+- Numbered equations like `(1)`, `(2)` followed by garbled content
+
+For each affected region, record the page number. Save the list to `<output-folder>/.work/formula-pages.json`:
+
+```json
+{
+  "formula_pages": [2, 3, 15, 16, 45],
+  "total": 5
+}
+```
+
+**Be generous:** prefer false positives (converting a non-formula page to image) over false negatives (missing a formula page). The cost of an extra image is minimal.
+
+### 3b. Convert flagged pages to images
+
+Use `pdf2image` to convert each flagged page to a high-resolution PNG:
+
+```python
+from pdf2image import convert_from_path
+import json
+
+with open("<output-folder>/.work/formula-pages.json") as f:
+    data = json.load(f)
+
+for page_num in data["formula_pages"]:
+    images = convert_from_path(
+        source_pdf,
+        first_page=page_num,
+        last_page=page_num,
+        dpi=300
+    )
+    images[0].save(f"<output-folder>/.work/page-{page_num}.png")
+```
+
+### 3c. Vision-extract formula content
+
+For each formula page image, use the `Read` tool (which supports image files natively) to view the image. Then:
+
+1. Identify each formula in the image.
+2. Transcribe each formula into correct LaTeX notation.
+3. Save the transcriptions to `<output-folder>/.work/formulas-page-<N>.md`:
+
+```markdown
+## Page <N> formulas
+
+### Formula 1 (Theorem 3.2)
+$$\frac{dx}{dt} = Ax + Bu$$
+
+### Formula 2 (Definition 3.3)
+$$G(s) = C(sI - A)^{-1}B + D$$
+```
+
+### 3d. Rules
+
+- In the final TeX output, always prefer vision-extracted LaTeX over text-extracted content for formulas.
+- If a page has no formulas, skip the vision step — do not create images for pure-text pages.
+- If pdf2image is unavailable, skip this entire step and add a note in the output: "公式未经视觉校验，可能存在误差".
+
+## Step 4. Segmentation Map
+
+Refine the segmentation map built in Step 2d based on the full text extraction:
+
 - Identify chapter boundaries, section titles, definition blocks, theorem blocks, example blocks.
-- Build a segmentation map: which pages belong to which chapter/section.
-- Segment by natural chapter/section boundaries. Each segment should be self-contained.
+- Assign pages to natural chapter/section boundaries. Each segment should be self-contained.
 - For very long documents (100+ pages), segmentation is mandatory.
+- Each segment must list its source chunk files and formula files (if applicable).
+- Save the updated map to `<output-folder>/.work/segment-map.json`.
 
-## Step 3. Extract and Explain
+## Step 5. Extract and Explain (Per-Segment)
+
+For each segment in the segmentation map:
+
+### 5a. Load segment data
+
+Read only the files belonging to this segment (not other segments' files):
+- The relevant chunk markdown files from `.work/`
+- Any formula transcription files for pages in this segment
+
+Never load the entire document's text into context. Process one segment at a time.
+
+### 5b. Extract and explain (three-dimensional mode)
 
 For each segment, extract ALL knowledge points and produce a three-dimensional explanation for each one.
 
 Do not skip definitions or theorems. Do not collapse multiple knowledge points into one. Do not skip page references.
 
-### Dimension 1: Definition & Theorem (定义与定理)
+#### Dimension 1: Definition & Theorem (定义与定理)
 
 - Quote the exact mathematical statement with page reference: `[文件名] 第X页 [定义/定理Y]`.
+- **Formula rule:** for any mathematical content, prefer vision-extracted LaTeX from Step 3 over text-extracted content. If the text extraction produced garbled formulas and no vision extraction is available, flag the formula for manual review.
 - List equivalent definitions or conditions when applicable.
 - **Every theorem must be followed by its COMPLETE proof** — show every step. If the source omits the proof, supply one. Write `$\qed$` at the end.
 - After each definition, provide a concrete example verifying it with actual values.
 
-### Dimension 2: Intuitive Understanding (直观理解)
+#### Dimension 2: Intuitive Understanding (直观理解)
 
 - Plain language explanation in at least one substantial paragraph (5+ sentences).
 - Intuitive interpretation with analogies when applicable.
@@ -132,30 +300,45 @@ Do not skip definitions or theorems. Do not collapse multiple knowledge points i
 - Address common misconceptions explicitly.
 - Include a concrete numerical example.
 
-### Dimension 3: Source Location (讲义定位)
+#### Dimension 3: Source Location (讲义定位)
 
 - `[文件名] 第X页 [节号]`
 - Cross-reference related concepts from earlier/later pages.
 
-### Narrative Flow
+#### Narrative Flow
 
 - Each section/chapter starts with a **transition paragraph** (2--4 sentences) explaining what question was left unresolved and how this section addresses it.
 - When a concept depends on earlier material, briefly recap before continuing.
 - Each section/chapter ends with a **本节小结** (3--5 key takeaways).
 
-## Step 4. Assemble and Verify
+### 5c. Write segment TeX
 
-After assembling the full draft, verify coverage:
+Write the segment's explanation TeX to `<output-folder>/.work/segment-<N>.tex`. Do not keep the segment TeX in context — save to disk and move on.
+
+### 5d. Use subagents for isolation
+
+When the platform supports it, use subagents for per-segment processing so each segment's context window starts fresh. The subagent receives the `.work/` file paths for its segment and returns the completed segment TeX file path.
+
+## Step 6. Assemble, Compile, and Verify
+
+### 6a. Assemble segments
+
+Read each `.work/segment-<N>.tex` file from disk sequentially and concatenate into the final TeX document. Add preamble and `\end{document}`.
+
+### 6b. Verify coverage
+
+After assembling the full draft, verify:
 - Every definition in the source has a corresponding explanation.
 - Every theorem in the source has a corresponding explanation.
 - Every important example is covered.
 - All three dimensions are present for each knowledge point.
-- Page references are accurate.
+- Page references are accurate (cross-check against segment map).
 - No section of the source was silently dropped.
+- Every formula uses vision-extracted LaTeX (from Step 3) rather than garbled text extraction.
 
 Fix any gaps before proceeding to file output.
 
-## Step 5. Write TeX and Compile PDF
+### 6c. Write TeX and compile
 
 1. Use `ctexart` document class.
 2. Only use packages from this whitelist: `amsmath`, `amssymb`, `amsthm`, `geometry`, `graphicx`. Do NOT use `xcolor`, `tcolorbox`, `enumitem`, `hyperref`, or any other package.
@@ -180,6 +363,10 @@ Fix any gaps before proceeding to file output.
    ```
 5. Confirm both `.tex` and `.pdf` exist in the output folder.
 
+### 6d. Cleanup
+
+The `.work/` directory may be kept (useful for debugging) but should not be counted as a deliverable. Temporary chunk PDFs should be deleted after markdown extraction.
+
 ## Output Naming
 
 - output folder: `DeepDive - <stem>` inside source PDF directory
@@ -201,3 +388,7 @@ Fix any gaps before proceeding to file output.
 - scattering files outside the `DeepDive - <stem>` folder
 - using LaTeX packages not in the whitelist (causing compilation failure)
 - claiming completion before `.tex` and `.pdf` both exist in the output folder
+- loading all chunk content into context simultaneously (must process one segment at a time)
+- using garbled text-extracted formulas instead of vision-transcribed LaTeX
+- skipping formula page vision extraction when pdf2image is available
+- not verifying pdf2image/poppler availability before starting formula extraction
