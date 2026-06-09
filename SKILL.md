@@ -37,6 +37,28 @@ description: Use when the user wants to generate a detailed explanation document
 - **Every section ends with a 本节小结** (3--5 key takeaways).
 - Do NOT compress to save space. Explain as if the reader has never seen it before.
 
+### Example Solution Requirements
+
+Every source example must be treated as a worked example, not a summary. Examples are where readers learn how to use the definitions and theorems, so the solution must show the method and the calculation path, not just the final answer.
+
+For each important example from the source, include:
+
+1. **题干给定**: list only the data, assumptions, and target explicitly provided by the source. Do not mix in quantities derived later.
+2. **解题目标**: state exactly what must be found, designed, verified, or proved.
+3. **解题方法**: explain why the chosen theorem, criterion, or computational method applies.
+4. **逐步计算**: show the necessary matrix products, ranks, determinants, characteristic polynomials, equation solving, substitutions, and simplifications.
+5. **结果校核**: substitute the result back into the required equations/conditions and verify it satisfies the problem.
+6. **易错点**: when relevant, point out common mistakes, especially confusing givens with derived results.
+
+### Givens vs Derived Results
+
+Keep problem statements and solution reasoning separate. A value computed during the solution is not a condition of the problem.
+
+- Do not use a derived matrix, rank, characteristic polynomial, pole-placement target, feedback gain, or intermediate equation as if it were given in the题干.
+- If you choose a value for design convenience, label it explicitly as a **设计选择**, **构造目标**, or **one feasible choice**, then derive the resulting matrices/gains and verify them.
+- Avoid phrases such as “取教材给出的反馈矩阵” unless the source problem explicitly gives that matrix as data. Prefer: “为满足目标极点，构造如下闭环结构……由此反推出反馈矩阵……最后回代校核。”
+- Never skip the derivation because the source lists an answer. If the source answer is terse, expand it into a full worked solution from the stated givens.
+
 ## Skill Boundary
 
 - Allowed skills: `lecture-tutor`, `firecrawl-parse`, and `pdf` only.
@@ -311,6 +333,24 @@ Do not skip definitions or theorems. Do not collapse multiple knowledge points i
 - When a concept depends on earlier material, briefly recap before continuing.
 - Each section/chapter ends with a **本节小结** (3--5 key takeaways).
 
+#### Worked Example Format
+
+When a source example appears, use a worked-example structure that separates source givens from solution reasoning. The exact number of steps may vary, but the separation must be visible.
+
+```latex
+\begin{example}[<Source example title>]
+\textbf{题干给定。} % only data/conditions explicitly provided by the source
+\textbf{解题目标。} % what the example asks us to find/design/prove
+\textbf{第一步：选择方法并说明原因。} % theorem/criterion/method and why it applies
+\textbf{第二步：代入题干数据逐步计算。} % matrix products, ranks, determinants, etc.
+\textbf{第三步：求解中间变量。} % solve equations or construct a design choice
+\textbf{第四步：回代校核。} % verify conditions/poles/equations/output behavior
+\textbf{易错点。} % optional, but include when a likely misconception exists
+\end{example}
+```
+
+For design examples, clearly distinguish a **constructive choice** from a **given condition**. Example: “We choose this closed-loop structure to meet the requested pole locations” is acceptable; “the problem gives this feedback matrix” is not acceptable unless the source explicitly states it.
+
 ### 5c. Write segment TeX
 
 Write the segment's explanation TeX to `<output-folder>/.work/segment-<N>.tex`. Do not keep the segment TeX in context — save to disk and move on.
@@ -335,6 +375,11 @@ After assembling the full draft, verify:
 - Page references are accurate (cross-check against segment map).
 - No section of the source was silently dropped.
 - Every formula uses vision-extracted LaTeX (from Step 3) rather than garbled text extraction.
+- Every source example has a complete worked solution, not just the final answer.
+- Every worked example explicitly distinguishes **题干给定** from derived/calculated quantities.
+- No intermediate result is used before it is derived from the source givens or clearly introduced as a design choice.
+- Any design choice is labeled as a choice/constructive target and followed by a verification step.
+- All calculations needed by the example's conclusion are shown, especially ranks, determinants, characteristic polynomials, matrix equations, pole-placement equations, and feedback gains.
 
 Fix any gaps before proceeding to file output.
 
@@ -392,3 +437,8 @@ The `.work/` directory may be kept (useful for debugging) but should not be coun
 - using garbled text-extracted formulas instead of vision-transcribed LaTeX
 - skipping formula page vision extraction when pdf2image is available
 - not verifying pdf2image/poppler availability before starting formula extraction
+- treating a derived feedback matrix, pole-placement target, rank result, determinant, or characteristic polynomial as if it were given in the problem statement
+- merging “题干给定” and “解题过程” into one paragraph so the reader cannot tell what was assumed versus derived
+- omitting the method explanation before calculations in examples
+- skipping determinant/rank/matrix-product steps and jumping directly to a final answer
+- failing to verify a constructed controller, matrix equation solution, or derived result by substitution
